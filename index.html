@@ -1,103 +1,95 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-  <meta charset="UTF-8">
-  <title>Belépés kód alapján</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background-color: #f4f4f9;
-    }
-    .card {
-      background: white;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      width: 300px;
-      text-align: center;
-    }
-    input {
-      width: 100%;
-      padding: 0.5rem;
-      margin: 1rem 0;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      width: 100%;
-      padding: 0.6rem;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    .hidden {
-      display: none;
-    }
-    #error-msg {
-      color: red;
-      font-size: 0.9rem;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Titkos Mikulás 🎄 Secret Santa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        .snowflake {
+            color: #fff;
+            position: fixed;
+            top: -10px;
+            animation: fall linear infinite;
+        }
+        @keyframes fall {
+            0% { transform: translateY(0px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0.2; }
+        }
+    </style>
 </head>
-<body>
+<body class="bg-gradient-to-br from-emerald-950 via-emerald-900 to-red-950 min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
 
-  <!-- Belépő doboz -->
-  <div class="card" id="login-section">
-    <h2>Belépés</h2>
-    <input type="text" id="access-code" placeholder="Add meg a belépési kódot">
-    <button onclick="handleLogin()">Belépés</button>
-    <p id="error-msg" class="hidden">Érvénytelen kód!</p>
-  </div>
+    <!-- Hóesés háttér -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden">
+        <div class="snowflake text-xl left-[10%] animate-[fall_7s_linear_infinite]">❄</div>
+        <div class="snowflake text-2xl left-[30%] animate-[fall_10s_linear_infinite]">❅</div>
+        <div class="snowflake text-lg left-[50%] animate-[fall_8s_linear_infinite]">❆</div>
+        <div class="snowflake text-xl left-[70%] animate-[fall_12s_linear_infinite]">❄</div>
+        <div class="snowflake text-2xl left-[90%] animate-[fall_9s_linear_infinite]">❅</div>
+    </div>
 
-  <!-- Belépés után megjelenő felület -->
-  <div class="card hidden" id="welcome-section">
-    <h2>Üdvözlünk!</h2>
-    <p>Bejelentkezve mint: <strong id="user-display"></strong></p>
-    <button onclick="handleLogout()">Kijelentkezés</button>
-  </div>
-
-  <script>
-    // Kód -> Név hozzárendelés
-    const USER_DATABASE = {
-      "KOD123": "Kovács Péter",
-      "ADMIN99": "Admin Felhasználó",
-      "TESZT42": "Minta Anna"
-    };
-
-    function handleLogin() {
-      const codeInput = document.getElementById("access-code").value.trim().toUpperCase();
-      const errorMsg = document.getElementById("error-msg");
-
-      if (USER_DATABASE[codeInput]) {
-        const userName = USER_DATABASE[codeInput];
+    <div class="w-full max-w-md bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-2xl shadow-2xl text-white relative z-10">
         
-        // Név megjelenítése és felület váltása
-        document.getElementById("user-display").textContent = userName;
-        document.getElementById("login-section").classList.add("hidden");
-        document.getElementById("welcome-section").classList.remove("hidden");
-        errorMsg.classList.add("hidden");
-      } else {
-        errorMsg.classList.remove("hidden");
-      }
-    }
+        <div class="text-center mb-8">
+            <span class="text-4xl">🎅</span>
+            <h1 class="text-3xl font-bold tracking-wider mt-2 text-red-400">Titkos Mikulás</h1>
+            <p class="text-emerald-200 text-sm mt-1">Húzd ki a párodat ajándékozáshoz!</p>
+        </div>
 
-    function handleLogout() {
-      document.getElementById("access-code").value = "";
-      document.getElementById("welcome-section").classList.add("hidden");
-      document.getElementById("login-section").classList.remove("hidden");
-    }
-  </script>
+        <!-- 1. Bejelentkezés (CSAK PIN KÓD) -->
+        <div id="login-section" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium mb-1 text-emerald-100 text-center">Add meg a 4 jegyű PIN kódodat</label>
+                <input type="password" id="pinInput" maxlength="4" placeholder="••••" class="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-white placeholder-gray-400 text-center tracking-widest text-2xl">
+            </div>
+            <button onclick="login()" class="w-full py-3 bg-red-600 hover:bg-red-700 font-semibold rounded-xl shadow-lg transition duration-200 cursor-pointer">
+                Belépés
+            </button>
+            <p id="loginError" class="text-red-400 text-sm text-center font-medium"></p>
+            
+            <div class="text-center mt-6">
+                <button onclick="toggleAdminModal()" class="text-xs text-emerald-300 hover:underline">Admin / Sorsolás indítása</button>
+            </div>
+        </div>
 
+        <!-- 2. Húzás képernyő -->
+        <div id="draw-section" class="hidden text-center space-y-6">
+            <h2 id="welcomeMsg" class="text-2xl font-semibold text-emerald-200"></h2>
+            <p class="text-gray-300 text-sm">A kalap készen áll. Kattints a gombra, hogy megtudd, kinek veszel ajándékot!</p>
+            <button onclick="drawName()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-xl font-bold rounded-xl shadow-xl transition duration-200 transform hover:scale-105 cursor-pointer">
+                🎩 Húzás a kalapból! 🎁
+            </button>
+        </div>
+
+        <!-- 3. Eredmény képernyő -->
+        <div id="result-section" class="hidden text-center space-y-6">
+            <h2 class="text-lg text-emerald-200">A te ajándékozottad:</h2>
+            <div id="drawnName" class="text-3xl font-bold text-yellow-400 bg-white/5 border-2 border-dashed border-yellow-400/50 p-6 rounded-xl shadow-inner">
+                Betöltés...
+            </div>
+            <p class="text-xs text-gray-300 italic">Jól jegyezd meg! Második alkalommal is ezt a nevet fogod látni. Shh... Titok! 🤫</p>
+            <button onclick="logout()" class="text-sm text-gray-300 hover:text-white underline">Kijelentkezés</button>
+        </div>
+
+    </div>
+
+    <!-- Admin Modal -->
+    <div id="adminModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl max-w-sm w-full space-y-4 text-white">
+            <h3 class="text-xl font-bold text-red-400">Admin Sorsolás</h3>
+            <p class="text-xs text-gray-300">Ez a gomb újragenerál egy zárt kört, így garantáltan senki sem húzza saját magát.</p>
+            <input type="password" id="adminPass" placeholder="Admin jelszó" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm">
+            <div class="flex space-x-2">
+                <button onclick="runAdminDraw()" class="flex-1 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-semibold text-sm">Sorsolás Indítása</button>
+                <button onclick="toggleAdminModal()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm">Mégse</button>
+            </div>
+            <p id="adminMsg" class="text-xs text-center"></p>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
 </body>
 </html>
