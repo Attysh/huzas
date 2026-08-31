@@ -111,12 +111,11 @@ window.toggleAdminModal = function() {
     modal.classList.toggle('hidden');
 }
 
-// Egyszerű kliens oldali admin sorsolás generátor
+// Javított admin sorsolás: Garantált zárt kör (senki sem húzhatja saját magát)
 window.runAdminDraw = async function() {
     const pass = document.getElementById('adminPass').value;
     const msgEl = document.getElementById('adminMsg');
 
-    // Egyszerű admin jelszó védelem (változtasd meg kedvedre)
     if (pass !== "mikulas2026") {
         msgEl.textContent = "Hibás admin jelszó!";
         msgEl.className = "text-xs text-center text-red-400";
@@ -131,55 +130,39 @@ window.runAdminDraw = async function() {
         });
 
         if (users.length < 2) {
-            msgEl.textContent = "Túl kevés felhasználó van az adatbázisban!";
+            msgEl.textContent = "Túl kevés felhasználó van az adatbázisban (min. 2 kell)!";
             msgEl.className = "text-xs text-center text-red-400";
             return;
         }
 
-        // Fisher-Yates keverés deadlock védelemmel
-        let shuffled = [...users];
-        let valid = false;
-        let attempts = 0;
-
-        while (!valid && attempts < 1000) {
-            attempts++;
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            // Ellenőrzés, hogy senki se húzza saját magát
-            valid = true;
-            for (let i = 0; i < users.length; i++) {
-                if (users[i].name === shuffled[i].name) {
-                    valid = false;
-                    break;
-                }
-            }
+        // 1. Megkeverjük a résztvevők sorrendjét véletlenszerűen (Fisher-Yates)
+        let circle = [...users];
+        for (let i = circle.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [circle[i], circle[j]] = [circle[j], circle[i]];
         }
 
-        if (!valid) {
-            msgEl.textContent = "Nem sikerült biztonságos párosítást találni, próbáld újra.";
-            return;
-        }
-
-        // Firestore frissítése a zárt kör párosaival
-        for (let i = 0; i < users.length; i++) {
-            const currentUserId = users[i].id;
-            const assignedPersonName = shuffled[(i + 1) % users.length].name; // Zárt kör logika
+        // 2. Kialakítunk egy zárt kört: circle[i] mindig a circle[i+1]-nek ad, az utolsó pedig az elsőnek
+        // Ez garantálja, hogy senki sem ajándékozza meg magát!
+        for (let i = 0; i < circle.length; i++) {
+            const giver = circle[i];
+            const receiver = circle[(i + 1) % circle.length]; // A kör következő eleme
             
-            const userRef = doc(db, "users", currentUserId);
+            const userRef = doc(db, "users", giver.id);
             await updateDoc(userRef, {
-                drawnPerson: assignedPersonName,
-                hasDrawn: false
+                drawnPerson: receiver.name,
+                hasDrawn: false // Visszaállítjuk, hogy újra meg lehessen nézni/húzni
             });
         }
 
-        msgEl.textContent = "Sikeres sorsolás és mentés a Firestore-ba! 🎉";
+        msgEl.textContent = "Újrasorsolva! A zárt kör elkészült, senki sem húzta magát! 🎉";
         msgEl.className = "text-xs text-center text-emerald-400";
 
     } catch (err) {
         console.error(err);
         msgEl.textContent = "Hiba történt a sorsolás alatt.";
         msgEl.className = "text-xs text-center text-red-400";
+    }
+}
     }
 }
