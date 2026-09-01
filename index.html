@@ -11,30 +11,28 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .font-festive { font-family: 'Cinzel', serif; }
 
-        /* Aurora Borealis (Sarki fény) animáció */
+        /* Aurora Borealis javított méretezéssel */
         .aurora {
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.25), transparent 40%),
-                        radial-gradient(circle at 80% 30%, rgba(225, 29, 72, 0.2), transparent 40%),
-                        radial-gradient(circle at 20% 40%, rgba(6, 182, 212, 0.25), transparent 40%);
-            filter: blur(60px);
-            animation: auroraGlow 14s ease-in-out infinite alternate;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 10%, rgba(16, 185, 129, 0.2), transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(225, 29, 72, 0.15), transparent 50%),
+                        radial-gradient(circle at 20% 30%, rgba(6, 182, 212, 0.2), transparent 50%);
+            filter: blur(50px);
+            animation: auroraGlow 12s ease-in-out infinite alternate;
             pointer-events: none;
         }
         @keyframes auroraGlow {
-            0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(8deg) scale(1.1); }
-            100% { transform: rotate(-5deg) scale(0.95); }
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.05); opacity: 1; }
         }
 
         /* Karácsonyi Izzósor Animációk */
         .light-bulb {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             animation: flashLight 1.6s infinite alternate ease-in-out;
         }
@@ -42,51 +40,47 @@
             0% { opacity: 0.3; transform: scale(0.85); box-shadow: none; }
             100% { opacity: 1; transform: scale(1.1); }
         }
-        .light-red { background: #ff2a55; box-shadow: 0 0 14px #ff2a55, 0 0 25px #ff2a55; animation-delay: 0.1s; }
-        .light-gold { background: #fbbf24; box-shadow: 0 0 14px #fbbf24, 0 0 25px #fbbf24; animation-delay: 0.5s; }
-        .light-green { background: #10b981; box-shadow: 0 0 14px #10b981, 0 0 25px #10b981; animation-delay: 0.9s; }
-        .light-blue { background: #38bdf8; box-shadow: 0 0 14px #38bdf8, 0 0 25px #38bdf8; animation-delay: 1.3s; }
+        .light-red { background: #ff2a55; box-shadow: 0 0 10px #ff2a55, 0 0 18px #ff2a55; animation-delay: 0.1s; }
+        .light-gold { background: #fbbf24; box-shadow: 0 0 10px #fbbf24, 0 0 18px #fbbf24; animation-delay: 0.5s; }
+        .light-green { background: #10b981; box-shadow: 0 0 10px #10b981, 0 0 18px #10b981; animation-delay: 0.9s; }
+        .light-blue { background: #38bdf8; box-shadow: 0 0 10px #38bdf8, 0 0 18px #38bdf8; animation-delay: 1.3s; }
 
-        /* Egyedi Gomb Lüktetés */
         .btn-glow {
-            box-shadow: 0 0 25px rgba(225, 29, 72, 0.45);
+            box-shadow: 0 0 20px rgba(225, 29, 72, 0.4);
             transition: all 0.3s ease;
         }
         .btn-glow:hover {
-            box-shadow: 0 0 35px rgba(225, 29, 72, 0.8), 0 0 15px rgba(251, 191, 36, 0.5);
+            box-shadow: 0 0 30px rgba(225, 29, 72, 0.7), 0 0 12px rgba(251, 191, 36, 0.4);
             transform: translateY(-2px);
         }
     </style>
 </head>
-<body class="bg-[#050b14] min-h-screen flex items-center justify-center p-4 relative overflow-x-hidden select-none">
+<body class="bg-[#050b14] h-screen w-screen flex items-center justify-center p-4 relative overflow-hidden select-none">
 
     <!-- Dinamikus Háttér Havazás Canvas -->
-    <canvas id="snowCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+    <canvas id="snowCanvas" class="absolute inset-0 pointer-events-none z-0"></canvas>
 
     <!-- Aurora Borealis Fénycsóvák -->
     <div class="aurora z-0"></div>
 
-    <!-- Téli Hegyek Sziluettje a háttér alján -->
-    <div class="fixed bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-[#02050a] via-[#050e1d]/80 to-transparent pointer-events-none z-0"></div>
+    <!-- Karácsonyi Háttérzene Audio Tag -->
+    <audio id="bgMusic" loop preload="auto" src="https://ia800301.us.archive.org/15/items/WeWishYouAMerryChristmas_201612/We%20Wish%20You%20a%20Merry%20Christmas.mp3"></audio>
 
-    <!-- Karácsonyi Háttérzene -->
-    <audio id="bgMusic" loop src="https://cdn.pixabay.com/download/audio/2022/11/20/audio_34f669db75.mp3?filename=we-wish-you-a-merry-christmas-126685.mp3"></audio>
-
-    <!-- Lebegő Prémium Zenevezérlő -->
-    <div class="fixed top-5 right-5 z-50 flex items-center gap-2.5 bg-slate-900/60 backdrop-blur-xl border border-white/20 px-4 py-2 rounded-full shadow-2xl text-white">
-        <button id="musicToggleBtn" onclick="toggleMusic()" class="text-xl focus:outline-none hover:scale-125 transition duration-200" title="Zene be/ki">
+    <!-- Lebegő Zenevezérlő -->
+    <div class="absolute top-4 right-4 z-50 flex items-center gap-2.5 bg-slate-900/60 backdrop-blur-xl border border-white/20 px-3.5 py-1.5 rounded-full shadow-2xl text-white">
+        <button id="musicToggleBtn" class="text-lg focus:outline-none hover:scale-115 transition duration-200" title="Zene be/ki">
             🔇
         </button>
         <div class="flex items-center gap-1.5">
             <span class="text-xs text-amber-300">🎄</span>
-            <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.3" oninput="changeVolume(this.value)" class="w-16 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500">
+            <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.3" class="w-14 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-red-500">
         </div>
     </div>
 
-    <!-- Fő Üveghatású Kártya -->
-    <div class="w-full max-w-md bg-slate-900/40 backdrop-blur-2xl border border-white/20 p-8 sm:p-10 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] text-white relative z-10 overflow-hidden">
+    <!-- Fő Kártya -->
+    <div class="w-full max-w-md bg-slate-900/40 backdrop-blur-2xl border border-white/20 p-6 sm:p-8 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] text-white relative z-10 overflow-hidden">
         
-        <!-- Fényfüzér az ablak tetején -->
+        <!-- Fényfüzér -->
         <div class="absolute -top-1 left-0 right-0 flex justify-around items-center px-4 py-2">
             <div class="light-bulb light-red"></div>
             <div class="light-bulb light-gold"></div>
@@ -97,70 +91,70 @@
             <div class="light-bulb light-green"></div>
         </div>
 
-        <!-- Fejléc / Mikulás ikon -->
-        <div class="text-center mt-3 mb-8">
+        <!-- Fejléc -->
+        <div class="text-center mt-2 mb-6">
             <div class="relative inline-block">
-                <span id="santa-icon" class="text-6xl cursor-pointer inline-block transition-transform hover:scale-125 active:rotate-12 duration-300 drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]" onclick="triggerSantaEasterEgg()" title="Kattints rám!">🎅</span>
-                <span class="absolute -top-1 -right-2 text-xl animate-bounce">✨</span>
+                <span id="santa-icon" class="text-5xl cursor-pointer inline-block transition-transform hover:scale-125 active:rotate-12 duration-300 drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" title="Kattints rám!">🎅</span>
+                <span class="absolute -top-1 -right-2 text-lg animate-bounce">✨</span>
             </div>
-            <h1 class="text-3xl font-extrabold font-festive tracking-wider mt-3 bg-gradient-to-r from-red-400 via-amber-200 to-red-400 bg-clip-text text-transparent drop-shadow-sm">
+            <h1 class="text-2xl sm:text-3xl font-extrabold font-festive tracking-wider mt-2 bg-gradient-to-r from-red-400 via-amber-200 to-red-400 bg-clip-text text-transparent drop-shadow-sm">
                 Titkos Mikulás
             </h1>
-            <p class="text-emerald-300/80 text-xs tracking-widest uppercase font-semibold mt-1">Secret Santa Sorsolás</p>
+            <p class="text-emerald-300/80 text-[10px] sm:text-xs tracking-widest uppercase font-semibold mt-1">Secret Santa Sorsolás</p>
         </div>
 
-        <!-- 1. Bejelentkezési képernyő -->
-        <div id="login-section" class="space-y-5">
-            <div class="bg-white/5 border border-white/10 rounded-2xl p-4 text-center focus-within:border-amber-400/60 transition duration-300">
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Saját 4-jegyű PIN kódod</label>
-                <input type="password" id="pinInput" maxlength="4" placeholder="••••" class="w-full bg-transparent border-none focus:outline-none text-white placeholder-slate-600 text-center tracking-[0.5em] text-3xl font-bold">
+        <!-- 1. Bejelentkezés -->
+        <div id="login-section" class="space-y-4">
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 text-center focus-within:border-amber-400/60 transition duration-300">
+                <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1">Saját 4-jegyű PIN kódod</label>
+                <input type="password" id="pinInput" maxlength="4" placeholder="••••" class="w-full bg-transparent border-none focus:outline-none text-white placeholder-slate-600 text-center tracking-[0.4em] text-2xl sm:text-3xl font-bold">
             </div>
             
-            <button onclick="login()" class="w-full py-4 bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-red-600 font-bold text-lg rounded-2xl shadow-lg btn-glow transition duration-300 cursor-pointer flex items-center justify-center gap-2">
+            <button id="loginBtn" class="w-full py-3.5 bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-red-600 font-bold text-base sm:text-lg rounded-2xl shadow-lg btn-glow transition duration-300 cursor-pointer flex items-center justify-center gap-2">
                 <span>Belépés a Húzáshoz</span>
                 <span>🎁</span>
             </button>
             <p id="loginError" class="text-red-400 text-xs text-center font-medium min-h-[16px]"></p>
             
-            <div class="flex justify-between items-center mt-6 pt-5 border-t border-white/10 text-xs font-semibold">
-                <button onclick="openGameModal()" class="text-amber-400 hover:text-amber-300 transition flex items-center gap-1">
+            <div class="flex justify-between items-center mt-4 pt-4 border-t border-white/10 text-xs font-semibold">
+                <button id="openGameBtn" class="text-amber-400 hover:text-amber-300 transition flex items-center gap-1">
                     <span>🎮</span> Minijáték
                 </button>
-                <button onclick="toggleAdminModal()" class="text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1">
+                <button id="openAdminBtn" class="text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1">
                     <span>⚙️</span> Sorsolás Indítása
                 </button>
             </div>
         </div>
 
         <!-- 2. Húzás képernyő -->
-        <div id="draw-section" class="hidden text-center space-y-6">
-            <h2 id="welcomeMsg" class="text-2xl font-bold text-amber-200"></h2>
-            <div class="p-5 bg-white/5 border border-white/10 rounded-2xl">
-                <p class="text-slate-300 text-sm leading-relaxed">A nevek bent vannak a puttonyban. Kattints a gombra, és derítsd ki, kinek veszel ajándékot!</p>
+        <div id="draw-section" class="hidden text-center space-y-5">
+            <h2 id="welcomeMsg" class="text-xl sm:text-2xl font-bold text-amber-200"></h2>
+            <div class="p-4 bg-white/5 border border-white/10 rounded-2xl">
+                <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">A nevek bent vannak a puttonyban. Kattints a gombra, és derítsd ki, kinek veszel ajándékot!</p>
             </div>
-            <button onclick="drawName()" class="w-full py-5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-xl font-extrabold rounded-2xl shadow-xl transform hover:scale-[1.03] active:scale-95 transition duration-300 cursor-pointer border border-emerald-400/40 flex items-center justify-center gap-2">
+            <button id="drawBtn" class="w-full py-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-lg sm:text-xl font-extrabold rounded-2xl shadow-xl transform hover:scale-[1.02] active:scale-95 transition duration-300 cursor-pointer border border-emerald-400/40 flex items-center justify-center gap-2">
                 <span>🎩 Húzás a Kalapból! ❄️</span>
             </button>
         </div>
 
         <!-- 3. Eredmény képernyő -->
-        <div id="result-section" class="hidden text-center space-y-6">
-            <h2 class="text-sm font-semibold uppercase tracking-widest text-emerald-300">A te megajándékozottad:</h2>
+        <div id="result-section" class="hidden text-center space-y-5">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-emerald-300">A te megajándékozottad:</h2>
             
-            <div class="relative py-8 px-4 bg-gradient-to-b from-amber-500/10 to-red-500/10 border-2 border-dashed border-amber-400/60 rounded-2xl shadow-[inset_0_0_25px_rgba(251,191,36,0.15)]">
-                <span class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-slate-900 px-3 py-0.5 text-xs text-amber-400 rounded-full border border-amber-400/40">🎄 Titkos Küldetés 🎄</span>
-                <div id="drawnName" class="text-4xl font-black text-amber-300 tracking-wide drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]">
+            <div class="relative py-6 px-4 bg-gradient-to-b from-amber-500/10 to-red-500/10 border-2 border-dashed border-amber-400/60 rounded-2xl shadow-[inset_0_0_20px_rgba(251,191,36,0.15)]">
+                <span class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-slate-900 px-3 py-0.5 text-[10px] text-amber-400 rounded-full border border-amber-400/40">🎄 Titkos Küldetés 🎄</span>
+                <div id="drawnName" class="text-3xl sm:text-4xl font-black text-amber-300 tracking-wide drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]">
                     Betöltés...
                 </div>
             </div>
 
-            <p class="text-xs text-slate-400 italic">Jól jegyezd meg! Bármikor visszaléphetsz ezzel a kóddal, és ezt a nevet fogod látni. Shh... Ne áruld el senkinek! 🤫</p>
+            <p class="text-[11px] text-slate-400 italic">Jól jegyezd meg! Bármikor visszaléphetsz ezzel a kóddal. Shh... Ne áruld el senkinek! 🤫</p>
             
-            <div class="space-y-3 pt-2">
-                <button onclick="openGameModal()" class="w-full py-3 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/30 rounded-xl text-xs font-bold text-amber-300 transition flex items-center justify-center gap-2">
+            <div class="space-y-2 pt-1">
+                <button id="openGameBtnFromResult" class="w-full py-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/30 rounded-xl text-xs font-bold text-amber-300 transition flex items-center justify-center gap-2">
                     <span>🎮</span> Játszom egyet a minijátékkal
                 </button>
-                <button onclick="logout()" class="text-xs text-slate-400 hover:text-white underline block mx-auto transition">Kijelentkezés</button>
+                <button id="logoutBtn" class="text-xs text-slate-400 hover:text-white underline block mx-auto transition pt-1">Kijelentkezés</button>
             </div>
         </div>
 
@@ -175,8 +169,8 @@
             <p class="text-xs text-slate-300 leading-relaxed">Ez a gomb újragenerál egy tökéletes zárt kört, így senki sem fogja saját magát húzni, és mindenki újra húzhat.</p>
             <input type="password" id="adminPass" placeholder="Admin jelszó" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-red-500">
             <div class="flex space-x-2 pt-2">
-                <button onclick="runAdminDraw()" class="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-xl font-bold text-sm transition">Sorsolás Indítása</button>
-                <button onclick="toggleAdminModal()" class="px-4 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm transition">Mégse</button>
+                <button id="runAdminDrawBtn" class="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-xl font-bold text-sm transition">Sorsolás Indítása</button>
+                <button id="closeAdminBtn" class="px-4 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm transition">Mégse</button>
             </div>
             <p id="adminMsg" class="text-xs text-center min-h-[14px]"></p>
         </div>
@@ -184,27 +178,27 @@
 
     <!-- Minijáték Modal -->
     <div id="gameModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-700 p-6 rounded-3xl max-w-md w-full space-y-4 text-white text-center shadow-2xl">
+        <div class="bg-slate-900 border border-slate-700 p-5 rounded-3xl max-w-sm w-full space-y-3 text-white text-center shadow-2xl">
             <div class="flex justify-between items-center">
-                <h3 class="text-base font-bold text-amber-400 flex items-center gap-1.5">
-                    <span>🎁</span> Ajándékelkapó Karácsonyi Játék
+                <h3 class="text-sm font-bold text-amber-400 flex items-center gap-1.5">
+                    <span>🎁</span> Ajándékelkapó Játék
                 </h3>
-                <button onclick="closeGameModal()" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+                <button id="closeGameBtn" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
             </div>
-            <p class="text-xs text-slate-300">Irányítsd a puttonyt az egereddel vagy az ujjaddal! Gyűjtsd a csomagokat 🎁, de vigyázz a bombákkal 💣!</p>
+            <p class="text-[11px] text-slate-300">Irányítsd a puttonyt az egereddel vagy az ujjaddal! Gyűjtsd a csomagokat 🎁, de kerüld a bombákat 💣!</p>
             
             <div class="relative bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 shadow-inner">
-                <canvas id="gameCanvas" width="350" height="380" class="mx-auto block"></canvas>
+                <canvas id="gameCanvas" width="320" height="340" class="mx-auto block"></canvas>
                 <div id="gameOverScreen" class="hidden absolute inset-0 bg-black/80 flex flex-col items-center justify-center space-y-3">
-                    <p class="text-2xl font-black text-red-400">Játék Vége! ❄️</p>
-                    <p class="text-sm text-amber-300 font-semibold">Összegyűjtött pontszám: <span id="finalScore">0</span></p>
-                    <button onclick="restartGame()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold text-sm transition shadow-lg">Újrapróbálom</button>
+                    <p class="text-xl font-black text-red-400">Játék Vége! ❄️</p>
+                    <p class="text-xs text-amber-300 font-semibold">Összegyűjtött pontszám: <span id="finalScore">0</span></p>
+                    <button id="restartGameBtn" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold text-xs transition shadow-lg">Újrapróbálom</button>
                 </div>
             </div>
 
             <div class="flex justify-between items-center text-xs font-bold px-2 text-slate-300">
-                <span>Pont: <span id="currentScore" class="text-amber-400 text-sm">0</span></span>
-                <span>Életek: <span id="livesCount" class="text-red-400 text-sm">❤️❤️❤️</span></span>
+                <span>Pont: <span id="currentScore" class="text-amber-400">0</span></span>
+                <span>Életek: <span id="livesCount" class="text-red-400">❤️❤️❤️</span></span>
             </div>
         </div>
     </div>
