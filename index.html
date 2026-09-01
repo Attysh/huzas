@@ -93,7 +93,7 @@
             <p class="text-emerald-300/80 text-[10px] sm:text-xs tracking-widest uppercase font-semibold mt-1">Secret Santa Sorsolás</p>
         </div>
 
-        <!-- 1. Bejelentkezés -->
+        <!-- 1. Bejelentkezés (CSAK PIN KÓD ÉS ADMIN GOMB) -->
         <div id="login-section" class="space-y-4">
             <div class="bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 text-center focus-within:border-amber-400/60 transition duration-200">
                 <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1">Saját 4-jegyű PIN kódod</label>
@@ -106,18 +106,15 @@
             </button>
             <p id="loginError" class="text-red-400 text-xs text-center font-medium min-h-[16px]"></p>
             
-            <div class="flex justify-between items-center mt-4 pt-4 border-t border-white/10 text-xs font-semibold">
-                <button id="openGameBtn" class="text-amber-400 hover:text-amber-300 transition flex items-center gap-1 cursor-pointer">
-                    <span>🎮</span> Minijáték
-                </button>
-                <button id="openAdminBtn" class="text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 cursor-pointer">
-                    <span>⚙️</span> Sorsolás Indítása
+            <div class="text-center mt-4 pt-4 border-t border-white/10 text-xs font-semibold">
+                <button id="openAdminBtn" class="text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1 mx-auto cursor-pointer">
+                    <span>⚙️</span> Sorsolás Indítása (Admin)
                 </button>
             </div>
         </div>
 
-        <!-- 2. Húzás képernyő -->
-        <div id="draw-section" class="hidden text-center space-y-5">
+        <!-- 2. Húzás képernyő (Belépés után, ha még nem húzott) -->
+        <div id="draw-section" class="hidden text-center space-y-4">
             <h2 id="welcomeMsg" class="text-xl sm:text-2xl font-bold text-amber-200"></h2>
             <div class="p-4 bg-white/5 border border-white/10 rounded-2xl">
                 <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">A nevek bent vannak a puttonyban. Kattints a gombra, és derítsd ki, kinek veszel ajándékot!</p>
@@ -125,10 +122,16 @@
             <button id="drawBtn" class="w-full py-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-lg sm:text-xl font-extrabold rounded-2xl shadow-xl transform hover:scale-[1.02] active:scale-95 transition duration-200 cursor-pointer border border-emerald-400/40 flex items-center justify-center gap-2">
                 <span>🎩 Húzás a Kalapból! ❄️</span>
             </button>
+            <div class="pt-2 border-t border-white/10">
+                <button id="openGameBtnFromDraw" class="w-full py-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/30 rounded-xl text-xs font-bold text-amber-300 transition flex items-center justify-center gap-2 cursor-pointer">
+                    <span>🎮</span> Játszom egyet a minijátékkal
+                </button>
+                <button id="logoutBtnFromDraw" class="text-xs text-slate-400 hover:text-white underline block mx-auto transition mt-2 cursor-pointer">Kijelentkezés</button>
+            </div>
         </div>
 
-        <!-- 3. Eredmény képernyő -->
-        <div id="result-section" class="hidden text-center space-y-5">
+        <!-- 3. Eredmény képernyő (Belépés után, ha már húzott) -->
+        <div id="result-section" class="hidden text-center space-y-4">
             <h2 class="text-xs font-semibold uppercase tracking-widest text-emerald-300">A te megajándékozottad:</h2>
             
             <div class="relative py-6 px-4 bg-gradient-to-b from-amber-500/10 to-red-500/10 border-2 border-dashed border-amber-400/60 rounded-2xl shadow-[inset_0_0_20px_rgba(251,191,36,0.15)]">
@@ -166,7 +169,7 @@
         </div>
     </div>
 
-    <!-- Minijáték Modal & Leaderboard -->
+    <!-- Minijáték Modal & Garantáltan Működő Ranglista -->
     <div id="gameModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
         <div class="bg-slate-900 border border-slate-700 p-5 rounded-3xl max-w-sm w-full space-y-3 text-white text-center shadow-2xl">
             <div class="flex justify-between items-center">
