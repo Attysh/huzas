@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCI5Mj9LXVfKNq5CHBvr7Fc7XOOQLo5XiY",
@@ -58,14 +58,13 @@ if (snowCanvas) {
     renderSnow();
 }
 
-// ================= WEB AUDIO API KARÁCSONYI SZINTETIZÁTOR (Garantáltan megszólal) =================
+// ================= WEB AUDIO API KARÁCSONYI SZINTETIZÁTOR =================
 let audioCtx = null;
 let isMusicPlaying = false;
 let masterGain = null;
 let synthTimer = null;
 let currentNoteIndex = 0;
 
-// Jingle Bells dallam frekvenciák (Hz) és hosszak
 const melody = [
     { f: 329.63, d: 0.25 }, { f: 329.63, d: 0.25 }, { f: 329.63, d: 0.5 },
     { f: 329.63, d: 0.25 }, { f: 329.63, d: 0.25 }, { f: 329.63, d: 0.5 },
@@ -92,7 +91,7 @@ function playNote(freq, duration) {
     const osc = audioCtx.createOscillator();
     const noteGain = audioCtx.createGain();
 
-    osc.type = 'sine'; // Tiszta, harang-szerű téli hang
+    osc.type = 'sine';
     osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
 
     noteGain.gain.setValueAtTime(0.001, audioCtx.currentTime);
@@ -154,7 +153,6 @@ if (volumeSlider) {
     });
 }
 
-// Első kattintáskor automatikus indítás
 document.addEventListener('click', function autoPlayOnFirstUserAction() {
     if (!isMusicPlaying) {
         startMusic();
@@ -361,7 +359,51 @@ if (santaIcon) {
     });
 }
 
-// ================= TELJESEN OPTIMALIZÁLT 60-120 FPS JÁTÉK =================
+// ================= LEADERBOARD LOGIKA =================
+async function loadLeaderboard() {
+    const listEl = document.getElementById('leaderboardList');
+    const userBestEl = document.getElementById('userBestScore');
+    if (!listEl) return;
+
+    if (currentUser) {
+        userBestEl.textContent = `Saját rekord: ${currentUser.highScore || 0}`;
+    }
+
+    try {
+        const q = query(collection(db, "users"), orderBy("highScore", "desc"), limit(5));
+        const querySnapshot = await getDocs(q);
+        
+        listEl.innerHTML = '';
+        let rank = 1;
+
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const score = data.highScore || 0;
+            const isMe = currentUser && currentUser.name === data.name;
+            
+            const badge = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+            
+            const row = document.createElement('div');
+            row.className = `flex justify-between items-center px-2 py-1 rounded-lg ${isMe ? 'bg-amber-500/20 text-amber-200 font-bold border border-amber-500/30' : 'bg-slate-800/60 text-slate-300'}`;
+            row.innerHTML = `
+                <span class="flex items-center gap-1.5">${badge} ${data.name}</span>
+                <span class="font-mono text-amber-400">${score} pont</span>
+            `;
+            listEl.appendChild(row);
+            rank++;
+        });
+
+        if (rank === 1) {
+            listEl.innerHTML = '<p class="text-slate-500 text-center py-1">Még nincs rögzített pontszám.</p>';
+        }
+
+    } catch (err) {
+        console.error("Ranglista betöltési hiba:", err);
+        listEl.innerHTML = '<p class="text-red-400 text-center py-1">Hiba a ranglista betöltésekor.</p>';
+    }
+}
+
+// ================= AKADÁSMENTES JÁTÉK MOTOR =================
 const gameModal = document.getElementById('gameModal');
 const openGameBtn = document.getElementById('openGameBtn');
 const openGameBtnFromResult = document.getElementById('openGameBtnFromResult');
@@ -382,6 +424,7 @@ let lastTime = 0;
 function openGameModal() {
     if (gameModal) gameModal.classList.remove('hidden');
     isGameOpen = true;
+    loadLeaderboard();
     restartGame();
 }
 
@@ -409,26 +452,25 @@ function updateGameStats() {
     document.getElementById('livesCount').textContent = '❤️'.repeat(Math.max(0, lives));
 }
 
-// Egyszerűsített, gyors vektoros rajzolás (nem használ nehézkes emoji fontokat)
 function drawPresent(x, y) {
-    ctx.fillStyle = '#ef4444'; // Piros doboz
+    ctx.fillStyle = '#ef4444';
     ctx.fillRect(x, y, 22, 22);
-    ctx.fillStyle = '#fbbf24'; // Arany szalag
+    ctx.fillStyle = '#fbbf24';
     ctx.fillRect(x + 9, y, 4, 22);
     ctx.fillRect(x, y + 9, 22, 4);
 }
 
 function drawBomb(x, y) {
-    ctx.fillStyle = '#334155'; // Sötétszürke bomba
+    ctx.fillStyle = '#334155';
     ctx.beginPath();
     ctx.arc(x + 11, y + 11, 10, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#f97316'; // Kanóc lángja
+    ctx.fillStyle = '#f97316';
     ctx.fillRect(x + 9, y - 3, 4, 4);
 }
 
 function drawBasket(x, y, w, h) {
-    ctx.fillStyle = '#b45309'; // Puttony fa keret
+    ctx.fillStyle = '#b45309';
     ctx.beginPath();
     ctx.roundRect(x, y, w, h, [0, 0, 8, 8]);
     ctx.fill();
@@ -442,11 +484,9 @@ function gameLoop(now) {
     const dt = Math.min((now - lastTime) / 1000, 0.1);
     lastTime = now;
 
-    // Tiszta canvas ürítés
     ctx.fillStyle = '#020617';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Elemek generálása időalapon (nem véletlenszerű képkockánként)
     if (now - lastSpawn > 650) {
         lastSpawn = now;
         const isBomb = Math.random() < 0.25;
@@ -458,10 +498,8 @@ function gameLoop(now) {
         });
     }
 
-    // Puttony rajzolása
     drawBasket(basket.x, basket.y, basket.width, basket.height);
 
-    // Elemek mozgatása és kirajzolása
     for (let i = items.length - 1; i >= 0; i--) {
         const item = items[i];
         item.y += item.vy * dt;
@@ -472,7 +510,6 @@ function gameLoop(now) {
             drawPresent(item.x, item.y);
         }
 
-        // Ütközés a kosárral
         if (item.y + 22 >= basket.y && item.y <= basket.y + basket.height &&
             item.x + 22 >= basket.x && item.x <= basket.x + basket.width) {
             if (!item.isBomb) {
@@ -490,7 +527,6 @@ function gameLoop(now) {
             continue;
         }
 
-        // Leesett elemek
         if (item.y > canvas.height) {
             if (!item.isBomb) {
                 lives--;
@@ -507,10 +543,28 @@ function gameLoop(now) {
     gameAnimationId = requestAnimationFrame(gameLoop);
 }
 
-function endGame() {
+async function endGame() {
     isGameOver = true;
     document.getElementById('finalScore').textContent = score;
+    const recordMsg = document.getElementById('newRecordMsg');
+    recordMsg.classList.add('hidden');
+
+    if (currentUser) {
+        const currentBest = currentUser.highScore || 0;
+        if (score > currentBest) {
+            currentUser.highScore = score;
+            recordMsg.classList.remove('hidden');
+            try {
+                const userRef = doc(db, "users", currentUser.id);
+                await updateDoc(userRef, { highScore: score });
+            } catch (err) {
+                console.error("Nem sikerült elmenteni az új rekordot:", err);
+            }
+        }
+    }
+
     document.getElementById('gameOverScreen').classList.remove('hidden');
+    loadLeaderboard();
 }
 
 if (openGameBtn) openGameBtn.addEventListener('click', openGameModal);
