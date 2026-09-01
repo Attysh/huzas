@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// A te egyedi Firebase konfigurációd
 const firebaseConfig = {
     apiKey: "AIzaSyCI5Mj9LXVfKNq5CHBvr7Fc7XOOQLo5XiY",
     authDomain: "mikulas-2026.firebaseapp.com",
@@ -16,10 +15,13 @@ const db = getFirestore(app);
 
 let currentUser = null;
 
-// ================= VALÓSÁGHŰ HAVAZÁS ANIMÁCIÓ (CANVAS) =================
+// ================= VALÓSÁGHŰ HAVAZÁS (CANVAS) OPTIMALIZÁLVA =================
 const snowCanvas = document.getElementById('snowCanvas');
+let isGameOpen = false;
+let snowAnimationId = null;
+
 if (snowCanvas) {
-    const sCtx = snowCanvas.getContext('2d');
+    const sCtx = snowCanvas.getContext('2d', { alpha: true });
     let width = (snowCanvas.width = window.innerWidth);
     let height = (snowCanvas.height = window.innerHeight);
 
@@ -28,20 +30,21 @@ if (snowCanvas) {
         height = snowCanvas.height = window.innerHeight;
     });
 
-    const flakes = Array.from({ length: 65 }, () => ({
+    const flakes = Array.from({ length: 45 }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
-        radius: Math.random() * 2.8 + 0.8,
-        speedY: Math.random() * 1.2 + 0.5,
-        speedX: Math.random() * 0.6 - 0.3,
-        opacity: Math.random() * 0.7 + 0.3
+        radius: Math.random() * 2.0 + 0.8,
+        speedY: Math.random() * 0.9 + 0.4,
+        speedX: Math.random() * 0.4 - 0.2,
+        opacity: Math.random() * 0.5 + 0.3
     }));
 
     function renderSnow() {
-        sCtx.clearRect(0, 0, width, height);
-        sCtx.fillStyle = '#ffffff';
+        if (isGameOpen) return; // Ha a játék nyitva van, a háttér havazás nem fogyasztja a processzort
 
-        for (const f of flakes) {
+        sCtx.clearRect(0, 0, width, height);
+        for (let i = 0; i < flakes.length; i++) {
+            const f = flakes[i];
             sCtx.beginPath();
             sCtx.arc(f.x, f.y, f.radius, 0, Math.PI * 2);
             sCtx.fillStyle = `rgba(255, 255, 255, ${f.opacity})`;
@@ -54,7 +57,7 @@ if (snowCanvas) {
             if (f.x > width) f.x = 0;
             if (f.x < 0) f.x = width;
         }
-        requestAnimationFrame(renderSnow);
+        snowAnimationId = requestAnimationFrame(renderSnow);
     }
     renderSnow();
 }
@@ -62,24 +65,25 @@ if (snowCanvas) {
 // ================= HÁTTÉRZENE VEZÉRLÉS =================
 const bgMusic = document.getElementById('bgMusic');
 const musicToggleBtn = document.getElementById('musicToggleBtn');
+const volumeSlider = document.getElementById('volumeSlider');
 
 if (bgMusic) {
     bgMusic.volume = 0.3;
 }
 
-window.toggleMusic = function() {
+function toggleMusic() {
     if (!bgMusic) return;
     if (bgMusic.paused) {
         bgMusic.play().then(() => {
             musicToggleBtn.textContent = '🔊';
-        }).catch(err => console.log(err));
+        }).catch(err => console.log("Audió hiba:", err));
     } else {
         bgMusic.pause();
         musicToggleBtn.textContent = '🔇';
     }
-};
+}
 
-window.changeVolume = function(val) {
+function changeVolume(val) {
     if (!bgMusic) return;
     bgMusic.volume = parseFloat(val);
     if (bgMusic.volume === 0 || bgMusic.paused) {
@@ -87,7 +91,10 @@ window.changeVolume = function(val) {
     } else {
         musicToggleBtn.textContent = '🔊';
     }
-};
+}
+
+if (musicToggleBtn) musicToggleBtn.addEventListener('click', toggleMusic);
+if (volumeSlider) volumeSlider.addEventListener('input', (e) => changeVolume(e.target.value));
 
 document.addEventListener('click', function initAudio() {
     if (bgMusic && bgMusic.paused && bgMusic.volume > 0) {
@@ -99,7 +106,7 @@ document.addEventListener('click', function initAudio() {
 }, { once: true });
 
 // ================= BELÉPÉS ÉS HÚZÁS =================
-window.login = async function() {
+async function login() {
     const pin = document.getElementById('pinInput').value.trim();
     const errorEl = document.getElementById('loginError');
 
@@ -134,9 +141,9 @@ window.login = async function() {
         console.error(err);
         errorEl.textContent = "Kapcsolódási hiba az adatbázishoz.";
     }
-};
+}
 
-window.drawName = async function() {
+async function drawName() {
     if (!currentUser) return;
 
     try {
@@ -162,8 +169,8 @@ window.drawName = async function() {
 
         if (typeof confetti === 'function') {
             confetti({
-                particleCount: 100,
-                spread: 80,
+                particleCount: 90,
+                spread: 75,
                 origin: { y: 0.6 },
                 colors: ['#ef4444', '#10b981', '#fbbf24', '#ffffff']
             });
@@ -173,7 +180,7 @@ window.drawName = async function() {
         console.error(err);
         alert("Hiba történt a sorsolás során.");
     }
-};
+}
 
 function updateUI() {
     document.getElementById('login-section').classList.add('hidden');
@@ -189,21 +196,37 @@ function updateUI() {
     }
 }
 
-window.logout = function() {
+function logout() {
     currentUser = null;
     document.getElementById('pinInput').value = '';
     document.getElementById('result-section').classList.add('hidden');
     document.getElementById('draw-section').classList.add('hidden');
     document.getElementById('login-section').classList.remove('hidden');
-};
+}
 
-window.toggleAdminModal = function() {
-    const modal = document.getElementById('adminModal');
-    modal.classList.toggle('hidden');
-};
+const loginBtn = document.getElementById('loginBtn');
+if (loginBtn) loginBtn.addEventListener('click', login);
 
-// ================= ZÁRT KÖRŰ SORSOLÁS GENERÁTOR =================
-window.runAdminDraw = async function() {
+const drawBtn = document.getElementById('drawBtn');
+if (drawBtn) drawBtn.addEventListener('click', drawName);
+
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) logoutBtn.addEventListener('click', logout);
+
+// ================= ADMIN MODAL =================
+const adminModal = document.getElementById('adminModal');
+const openAdminBtn = document.getElementById('openAdminBtn');
+const closeAdminBtn = document.getElementById('closeAdminBtn');
+const runAdminDrawBtn = document.getElementById('runAdminDrawBtn');
+
+function toggleAdminModal() {
+    if (adminModal) adminModal.classList.toggle('hidden');
+}
+
+if (openAdminBtn) openAdminBtn.addEventListener('click', toggleAdminModal);
+if (closeAdminBtn) closeAdminBtn.addEventListener('click', toggleAdminModal);
+
+async function runAdminDraw() {
     const pass = document.getElementById('adminPass').value;
     const msgEl = document.getElementById('adminMsg');
 
@@ -226,7 +249,6 @@ window.runAdminDraw = async function() {
             return;
         }
 
-        // Fisher-Yates zárt kör keverés
         let circle = [...users];
         for (let i = circle.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -252,53 +274,67 @@ window.runAdminDraw = async function() {
         msgEl.textContent = "Hiba történt a sorsolás alatt.";
         msgEl.className = "text-xs text-center text-red-400";
     }
-};
+}
+
+if (runAdminDrawBtn) runAdminDrawBtn.addEventListener('click', runAdminDraw);
 
 // ================= EASTER EGG =================
 let santaClicks = 0;
-window.triggerSantaEasterEgg = function() {
-    santaClicks++;
-    const santaEl = document.getElementById('santa-icon');
+const santaIcon = document.getElementById('santa-icon');
 
-    if (typeof confetti === 'function') {
-        confetti({
-            particleCount: 35,
-            spread: 55,
-            origin: { y: 0.35 },
-            colors: ['#ef4444', '#10b981', '#fbbf24', '#ffffff']
-        });
-    }
+if (santaIcon) {
+    santaIcon.addEventListener('click', () => {
+        santaClicks++;
+        if (typeof confetti === 'function') {
+            confetti({
+                particleCount: 30,
+                spread: 50,
+                origin: { y: 0.35 },
+                colors: ['#ef4444', '#10b981', '#fbbf24', '#ffffff']
+            });
+        }
 
-    santaEl.style.transform = 'scale(1.4) rotate(15deg)';
-    setTimeout(() => { santaEl.style.transform = ''; }, 200);
+        santaIcon.style.transform = 'scale(1.4) rotate(15deg)';
+        setTimeout(() => { santaIcon.style.transform = ''; }, 200);
 
-    if (santaClicks === 5) {
-        santaEl.textContent = '🦹';
-        alert("Ho-ho-ho! A Grincs leselkedik az ajándékok után! 🎄");
-    }
-};
+        if (santaClicks === 5) {
+            santaIcon.textContent = '🦹';
+            alert("Ho-ho-ho! A Grincs leselkedik az ajándékok után! 🎄");
+        }
+    });
+}
 
-// ================= AJÁNDÉKELKAPÓ MINI-JÁTÉK =================
+// ================= 60 FPS ULTRA-SMOOTH AJÁNDÉKELKAPÓ JÁTÉK =================
+const gameModal = document.getElementById('gameModal');
+const openGameBtn = document.getElementById('openGameBtn');
+const openGameBtnFromResult = document.getElementById('openGameBtnFromResult');
+const closeGameBtn = document.getElementById('closeGameBtn');
+const restartGameBtn = document.getElementById('restartGameBtn');
+
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas ? canvas.getContext('2d') : null;
+const ctx = canvas ? canvas.getContext('2d', { alpha: false }) : null;
 let gameAnimationId = null;
 let score = 0;
 let lives = 3;
-let basket = { x: 145, y: 330, width: 60, height: 20 };
+let basket = { x: 130, y: 295, width: 55, height: 20 };
 let items = [];
 let isGameOver = false;
+let lastFrameTime = 0;
 
-window.openGameModal = function() {
-    document.getElementById('gameModal').classList.remove('hidden');
+function openGameModal() {
+    if (gameModal) gameModal.classList.remove('hidden');
+    isGameOpen = true; // Háttérhavazás felfüggesztése a lagmentes játékért
     restartGame();
-};
+}
 
-window.closeGameModal = function() {
-    document.getElementById('gameModal').classList.add('hidden');
+function closeGameModal() {
+    if (gameModal) gameModal.classList.add('hidden');
+    isGameOpen = false;
     if (gameAnimationId) cancelAnimationFrame(gameAnimationId);
-};
+    if (snowCanvas) renderSnow(); // Háttérhavazás visszakapcsolása
+}
 
-window.restartGame = function() {
+function restartGame() {
     score = 0;
     lives = 3;
     items = [];
@@ -306,8 +342,9 @@ window.restartGame = function() {
     document.getElementById('gameOverScreen').classList.add('hidden');
     updateGameStats();
     if (gameAnimationId) cancelAnimationFrame(gameAnimationId);
-    gameLoop();
-};
+    lastFrameTime = performance.now();
+    gameLoop(performance.now());
+}
 
 function updateGameStats() {
     document.getElementById('currentScore').textContent = score;
@@ -315,36 +352,46 @@ function updateGameStats() {
 }
 
 function spawnItem() {
-    if (Math.random() < 0.035) {
-        const isBomb = Math.random() < 0.25;
+    if (Math.random() < 0.03) {
+        const isBomb = Math.random() < 0.22;
         items.push({
-            x: Math.random() * (canvas.width - 30),
-            y: -20,
-            speed: 2 + Math.random() * 2,
+            x: Math.random() * (canvas.width - 32),
+            y: -25,
+            speed: 130 + Math.random() * 80, // Sebesség pixel/másodpercben
             type: isBomb ? 'bomb' : 'present',
             emoji: isBomb ? '💣' : '🎁'
         });
     }
 }
 
-function gameLoop() {
+function gameLoop(timestamp) {
     if (isGameOver) return;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Delta time számítás a teljesen akadásmentes mozgáshoz bármilyen kijelzőn (60Hz / 120Hz / 144Hz)
+    const dt = Math.min((timestamp - lastFrameTime) / 1000, 0.1);
+    lastFrameTime = timestamp;
 
-    ctx.font = '30px Arial';
+    // Tiszta háttér kirajzolása
+    ctx.fillStyle = '#020617';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Puttony kirajzolása
+    ctx.font = '28px sans-serif';
     ctx.fillText('🧺', basket.x, basket.y + 15);
 
     spawnItem();
+
+    // Elemek kirajzolása és ütközésvizsgálata
+    ctx.font = '22px sans-serif'; // Csak egyszer állítjuk be a ciklus előtt
     for (let i = items.length - 1; i >= 0; i--) {
         const item = items[i];
-        item.y += item.speed;
+        item.y += item.speed * dt;
 
-        ctx.font = '24px Arial';
         ctx.fillText(item.emoji, item.x, item.y);
 
-        if (item.y >= basket.y - 10 && item.y <= basket.y + 20 &&
-            item.x + 20 >= basket.x && item.x <= basket.x + basket.width) {
+        // Ütközés a puttonnyal
+        if (item.y >= basket.y - 12 && item.y <= basket.y + 18 &&
+            item.x + 22 >= basket.x && item.x <= basket.x + basket.width) {
             if (item.type === 'present') {
                 score += 10;
             } else {
@@ -360,6 +407,7 @@ function gameLoop() {
             continue;
         }
 
+        // Képernyőről lecsúszás
         if (item.y > canvas.height) {
             if (item.type === 'present') {
                 lives--;
@@ -382,6 +430,11 @@ function endGame() {
     document.getElementById('gameOverScreen').classList.remove('hidden');
 }
 
+if (openGameBtn) openGameBtn.addEventListener('click', openGameModal);
+if (openGameBtnFromResult) openGameBtnFromResult.addEventListener('click', openGameModal);
+if (closeGameBtn) closeGameBtn.addEventListener('click', closeGameModal);
+if (restartGameBtn) restartGameBtn.addEventListener('click', restartGame);
+
 if (canvas) {
     const handleMove = (clientX) => {
         const rect = canvas.getBoundingClientRect();
@@ -389,7 +442,7 @@ if (canvas) {
         basket.x = Math.max(0, Math.min(canvas.width - basket.width, rootX - basket.width / 2));
     };
 
-    canvas.addEventListener('mousemove', (e) => handleMove(e.clientX));
+    canvas.addEventListener('mousemove', (e) => handleMove(e.clientX), { passive: true });
     canvas.addEventListener('touchmove', (e) => {
         if (e.touches.length > 0) {
             handleMove(e.touches[0].clientX);
