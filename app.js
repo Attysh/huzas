@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCI5Mj9LXVfKNq5CHBvr7Fc7XOOQLo5XiY",
@@ -268,6 +268,9 @@ if (drawBtn) drawBtn.addEventListener('click', drawName);
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) logoutBtn.addEventListener('click', logout);
 
+const logoutBtnFromDraw = document.getElementById('logoutBtnFromDraw');
+if (logoutBtnFromDraw) logoutBtnFromDraw.addEventListener('click', logout);
+
 // ================= ADMIN MODAL =================
 const adminModal = document.getElementById('adminModal');
 const openAdminBtn = document.getElementById('openAdminBtn');
@@ -359,7 +362,7 @@ if (santaIcon) {
     });
 }
 
-// ================= LEADERBOARD LOGIKA =================
+// ================= LEADERBOARD LOGIKA (KLIENS OLDALI MEGBÍZHATÓ RENDEZÉSSEL) =================
 async function loadLeaderboard() {
     const listEl = document.getElementById('leaderboardList');
     const userBestEl = document.getElementById('userBestScore');
@@ -370,31 +373,38 @@ async function loadLeaderboard() {
     }
 
     try {
-        const q = query(collection(db, "users"), orderBy("highScore", "desc"), limit(5));
-        const querySnapshot = await getDocs(q);
-        
-        listEl.innerHTML = '';
-        let rank = 1;
+        const querySnapshot = await getDocs(collection(db, "users"));
+        let users = [];
 
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            const score = data.highScore || 0;
-            const isMe = currentUser && currentUser.name === data.name;
-            
+            users.push({
+                name: data.name,
+                highScore: data.highScore !== undefined ? Number(data.highScore) : 0
+            });
+        });
+
+        // Csökkenő sorrendbe rendezzük a pontszámok alapján
+        users.sort((a, b) => b.highScore - a.highScore);
+
+        listEl.innerHTML = '';
+
+        users.forEach((user, index) => {
+            const rank = index + 1;
+            const isMe = currentUser && currentUser.name === user.name;
             const badge = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
-            
+
             const row = document.createElement('div');
             row.className = `flex justify-between items-center px-2 py-1 rounded-lg ${isMe ? 'bg-amber-500/20 text-amber-200 font-bold border border-amber-500/30' : 'bg-slate-800/60 text-slate-300'}`;
             row.innerHTML = `
-                <span class="flex items-center gap-1.5">${badge} ${data.name}</span>
-                <span class="font-mono text-amber-400">${score} pont</span>
+                <span class="flex items-center gap-1.5">${badge} ${user.name}</span>
+                <span class="font-mono text-amber-400">${user.highScore} pont</span>
             `;
             listEl.appendChild(row);
-            rank++;
         });
 
-        if (rank === 1) {
-            listEl.innerHTML = '<p class="text-slate-500 text-center py-1">Még nincs rögzített pontszám.</p>';
+        if (users.length === 0) {
+            listEl.innerHTML = '<p class="text-slate-500 text-center py-1">Még nincs rögzített felhasználó.</p>';
         }
 
     } catch (err) {
@@ -405,7 +415,7 @@ async function loadLeaderboard() {
 
 // ================= AKADÁSMENTES JÁTÉK MOTOR =================
 const gameModal = document.getElementById('gameModal');
-const openGameBtn = document.getElementById('openGameBtn');
+const openGameBtnFromDraw = document.getElementById('openGameBtnFromDraw');
 const openGameBtnFromResult = document.getElementById('openGameBtnFromResult');
 const closeGameBtn = document.getElementById('closeGameBtn');
 const restartGameBtn = document.getElementById('restartGameBtn');
@@ -422,6 +432,7 @@ let lastSpawn = 0;
 let lastTime = 0;
 
 function openGameModal() {
+    if (!currentUser) return; // Csak bejelentkezve nyitható meg
     if (gameModal) gameModal.classList.remove('hidden');
     isGameOpen = true;
     loadLeaderboard();
@@ -567,7 +578,7 @@ async function endGame() {
     loadLeaderboard();
 }
 
-if (openGameBtn) openGameBtn.addEventListener('click', openGameModal);
+if (openGameBtnFromDraw) openGameBtnFromDraw.addEventListener('click', openGameModal);
 if (openGameBtnFromResult) openGameBtnFromResult.addEventListener('click', openGameModal);
 if (closeGameBtn) closeGameBtn.addEventListener('click', closeGameModal);
 if (restartGameBtn) restartGameBtn.addEventListener('click', restartGame);
